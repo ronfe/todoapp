@@ -1,11 +1,29 @@
-## TodoApp ![npm](https://badge.fury.io/js/TodoApp.png)
+## TodoApp
 
 todo app for intern app
 
 ### Installation
+
+Now you should be ready install [bower](http://bower.io) .
+
+````
+$ [sudo] npm install -g bower
+````
+
+then
+
 ````
 $ npm install
 ````
+
+````
+$ node server.js
+...
+server is running at 3000
+
+````
+
+open <http://0:3000> in your favorite web browser .
 
 ### Contributing
 - Fork this repo
