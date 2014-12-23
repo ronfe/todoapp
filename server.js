@@ -1,68 +1,68 @@
-var express = require('express');
+var express     = require('express');
+var logger      = require('express-log');
+var static      = require('express-static');
+var bodyParser  = require('body-parser');
+var mongoose    = require('mongoose');
+
+
 var app = express();
 
-var mongoose = require('mongoose');
-var port = process.env.PORT || 8080;
-var morgan = require('morgan');
-var bodyParser = require('body-parser');
-var methodOverride = require('method-override');
+//app.set('db', 'mongodb://chihungfei:buguan372101@proximus.modulusmongo.net:27017/Maro2wis')
+app.set('db', 'mongodb://localhost/todoApp')
 
-mongoose.connect('mongodb://chihungfei:buguan372101@proximus.modulusmongo.net:27017/Maro2wis');
-app.use(express.static(__dirname + '/public'));
-app.use(morgan('dev'));
+app.use(logger());
+app.use(static(__dirname + '/public'));
 app.use(bodyParser.urlencoded({'extended':'true'}));
 app.use(bodyParser.json());
-app.use(bodyParser.json({type: 'application/vnd.api+json'}));
-app.use(methodOverride());
 
 //model part
 var Todo = mongoose.model('Todo', {
-    text: String,
+    text: String
 });
-
-//var hasDone = mongoose.model('hasDone', {hasN: Number});
-
 //router part manipulating data
 app.get('/api/todos', function(req, res){
     Todo.find(function(err, todos){
-        if(err) 
-            res.send(err);
-        res.json(todos);
+      if(err) return res.status(500).send(err);
+      res.json(todos);
     });
 });
-
+//create todo
 app.post('/api/todos', function(req, res){
     Todo.create({
         text: req.body.text,
         done: false,
-        
     }, function(err, todo){
-        if(err)
-            res.send(err);
-        Todo.find(function(err, todos){
-            if (err){res.send(err);}
-            res.json(todos);
-        });
+        if(err) return res.status(500).send(err);
+        res.json(todo);
     });
 });
 
+//edit todo
+app.post('/api/todos/:todo_id', function(req, res){
+    console.log(req.body);
+    Todo.update({_id: req.params.todo_id }, {$set: {text: req.body.text}}, function(err, todo){
+        if (err) { return res.status(500).send(err);}
+        res.json(todo);
+        });
+});
+
+//remove todo
 app.delete('/api/todos/:todo_id', function(req, res){
     Todo.remove({
         _id: req.params.todo_id
     }, function(err, todo){
-        if(err) {res.send(err);}
-        Todo.find(function(err, todos){
-            if (err) {res.send(err);}
-            res.json(todos);
-        });
+        if(err) return res.status(500).send(err);
+        res.json(todo);
     });
-    
+});
+//connect to mongodb
+mongoose.connect(app.get('db'), function(err){
+  if(err) throw err;
+  //run
+  var port = process.env.PORT || 3000;
+  var server = app.listen(port, function(){
+    console.log('server is running at %s', server.address().port);
+  });
 });
 
-//router control home
-app.get('*', function(req, res){
-    res.sendfile('./public/index.html');
-});
-
-//run
-app.listen(8080);
+module.exports = app;
